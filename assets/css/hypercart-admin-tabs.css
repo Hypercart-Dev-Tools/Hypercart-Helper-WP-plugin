@@ -1,0 +1,32 @@
+.hh-nav-tab-wrapper {
+	margin-bottom: 16px;
+}
+
+.hh-nav-tab-wrapper .nav-tab {
+	background: var(--hh-tab-bg, #f6f7f7);
+	color: var(--hh-tab-fg, #2c3338);
+	border: 0;
+	box-shadow: none;
+}
+
+.hh-nav-tab-wrapper .nav-tab:hover {
+	background: var(--hh-tab-hover-bg, #f0f0f1);
+	color: var(--hh-tab-hover-fg, #1d2327);
+}
+
+.hh-nav-tab-wrapper .nav-tab.nav-tab-active {
+	background: var(--hh-tab-active-bg, #ffffff);
+	color: var(--hh-tab-active-fg, #1d2327);
+	border: 0;
+}
+
+.hh-nav-tab-wrapper .nav-tab .dashicons {
+	vertical-align: text-bottom;
+	margin-right: 6px;
+}
+
+.hh-tab-panel {
+	background: #ffffff;
+	border: 1px solid #ccd0d4;
+	padding: 16px;
+}
