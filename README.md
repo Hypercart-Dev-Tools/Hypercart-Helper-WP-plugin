@@ -1,6 +1,6 @@
 # Hypercart Helper Plugin: Time/Date & Logger Specifications
 
-**Version:** 1.1.11
+**Version:** 1.1.11   
 **Author:** Noel @ Neochrome  
 **Date:** December 29, 2024  
 **Status:** Ready for Implementation  
