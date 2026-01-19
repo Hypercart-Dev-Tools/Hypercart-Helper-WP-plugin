@@ -20,18 +20,7 @@ Both are designed as stateless, static utility classes for reuse across the enti
 
 ### Build Strategy: Helper-First
 
-We're building Helper as a **standalone plugin first**, then HPM will depend on it. This is slightly riskier than inline-then-extract, but architecturally cleaner.
-
-**Timebox Commitment:** If Helper isn't working in 3 hours, abort and inline into HPM.
-
-**Scope Lock for v1.0:**
-- ✅ `Hypercart_Time` class
-- ✅ `Hypercart_Logger` class  
-- ✅ Cron for log cleanup
-- ❌ No admin UI
-- ❌ No settings page
-- ❌ No update checker
-- ❌ No license management
+We're building Helper as a **standalone plugin first**, then other Hypercart plugins will depend on it. This is slightly riskier than inline-then-extract, but architecturally cleaner.
 
 ---
 
