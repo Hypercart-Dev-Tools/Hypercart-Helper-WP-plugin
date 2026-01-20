@@ -26,6 +26,18 @@ define( 'HYPERCART_HELPER_FILE', __FILE__ );
 define( 'HYPERCART_HELPER_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HYPERCART_HELPER_URL', plugin_dir_url( __FILE__ ) );
 
+// Include the Plugin Update Checker
+require_once HYPERCART_HELPER_DIR . 'lib/plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$update_checker = PucFactory::buildUpdateChecker(
+    'https://github.com/Hypercart-Dev-Tools/Hypercart-Helper-WP-plugin',
+    __FILE__,
+    'hypercart-helper'
+);
+// Optional: Set the branch that contains the stable release.
+$update_checker->setBranch( 'main' );
+
 // Load utility classes
 require_once HYPERCART_HELPER_DIR . 'includes/class-hypercart-time.php';
 require_once HYPERCART_HELPER_DIR . 'includes/class-hypercart-logger.php';
