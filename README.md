@@ -2,7 +2,7 @@
 
 Shared utilities for the Hypercart plugin suite. Provides centralized time handling (UTC storage, local display), structured file-based logging, a reusable chart helper, and a safe Markdown viewer.
 
-**Version:** 1.1.12  
+**Version:** 1.1.13  
 **Author:** Neochrome  
 **Requires at least:** WordPress 6.0  
 **Requires PHP:** 7.4
@@ -139,4 +139,4 @@ echo Hypercart_Markdown_Viewer::render_file( 'plugins/my-plugin/README.md' );
 
 ## License
 
-GPL-2.0-or-later
+GPL-2.0-or-later. See `LICENSE.md`.
