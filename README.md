@@ -2,7 +2,7 @@
 
 Shared utilities for the Hypercart plugin suite. Provides centralized time handling (UTC storage, local display), structured file-based logging, a reusable chart helper, and a safe Markdown viewer.
 
-**Version:** 1.1.13  
+**Version:** 1.1.14  
 **Author:** Neochrome  
 **Requires at least:** WordPress 6.0  
 **Requires PHP:** 7.4
@@ -87,6 +87,43 @@ echo Hypercart_Charts::render_canvas( $chart, array( 'height' => 280 ) );
 // PHP
 echo Hypercart_Markdown_Viewer::render_file( 'plugins/my-plugin/README.md' );
 ```
+
+### Hypercart_Admin_Tabs
+
+Reusable admin tab UI for settings pages. The helper builds the tab nav using core `.nav-tab` styles and supports icons, labels, and URLs. Use it to render consistent tabs across your admin pages.
+
+```php
+$tabs = array(
+    array(
+        'id'    => 'settings',
+        'label' => 'Settings',
+        'url'   => admin_url( 'options-general.php?page=my-plugin&tab=settings' ),
+        'icon'  => 'dashicons-admin-generic',
+    ),
+    array(
+        'id'    => 'logs',
+        'label' => 'Logs',
+        'url'   => admin_url( 'options-general.php?page=my-plugin&tab=logs' ),
+        'icon'  => 'dashicons-clipboard',
+    ),
+);
+
+$active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'settings';
+
+echo Hypercart_Admin_Tabs::render( $tabs, $active_tab, array(
+    'context' => 'my-plugin',
+    'class'   => 'my-plugin-tabs',
+    'style'   => array(
+        'accent' => '#2271b1',
+    ),
+) );
+```
+
+Notes:
+- `id` must be unique and match the `tab` query string.
+- `url` should include both `page` and `tab` for correct routing.
+- `icon` uses Dashicons slugs (optional).
+- `context` scopes tab styles and helps avoid CSS collisions.
 
 ---
 
