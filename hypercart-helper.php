@@ -3,7 +3,7 @@
  * Plugin Name: Hypercart Helper
  * Plugin URI:  https://github.com/neochrome/hypercart-helper
  * Description: Shared utilities for the Hypercart plugin suite. Provides centralized time handling (UTC storage, local display) and structured file-based logging.
- * Version:     1.1.11
+ * Version:     1.1.13
  * Author:      Neochrome
  * Author URI:  https://neochrome.dev
  * License:     GPL-2.0-or-later
@@ -21,10 +21,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'HYPERCART_HELPER_VERSION', '1.1.11' );
+define( 'HYPERCART_HELPER_VERSION', '1.1.13' );
 define( 'HYPERCART_HELPER_FILE', __FILE__ );
 define( 'HYPERCART_HELPER_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HYPERCART_HELPER_URL', plugin_dir_url( __FILE__ ) );
+
+// Include the Plugin Update Checker
+require_once HYPERCART_HELPER_DIR . 'lib/plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$update_checker = PucFactory::buildUpdateChecker(
+    'https://github.com/Hypercart-Dev-Tools/Hypercart-Helper-WP-plugin',
+    __FILE__,
+    'hypercart-helper'
+);
+// Optional: Set the branch that contains the stable release.
+$update_checker->setBranch( 'main' );
 
 // Load utility classes
 require_once HYPERCART_HELPER_DIR . 'includes/class-hypercart-time.php';
