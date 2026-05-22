@@ -3,7 +3,7 @@
  * Plugin Name: Hypercart Helper
  * Plugin URI:  https://github.com/neochrome/hypercart-helper
  * Description: Shared utilities for the Hypercart plugin suite. Provides centralized time handling (UTC storage, local display) and structured file-based logging.
- * Version:     1.1.14
+ * Version:     1.1.16
  * Author:      Neochrome
  * Author URI:  https://neochrome.dev
  * License:     GPL-2.0-or-later
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'HYPERCART_HELPER_VERSION', '1.1.14' );
+define( 'HYPERCART_HELPER_VERSION', '1.1.16' );
 define( 'HYPERCART_HELPER_FILE', __FILE__ );
 define( 'HYPERCART_HELPER_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HYPERCART_HELPER_URL', plugin_dir_url( __FILE__ ) );

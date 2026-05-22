@@ -1,7 +1,7 @@
 # Hypercart Helper API Integration Guide
 
-**Version:** 1.1.8
-**Last Updated:** 2026-01-18
+**Version:** 1.1.16
+**Last Updated:** 2026-05-21
 **Audience:** Plugin developers and LLMs consuming Hypercart Helper utilities
 
 ---
@@ -397,11 +397,13 @@ public static function is_future( int $timestamp ): bool
 
 **Signatures:**
 ```php
-public static function debug( string $plugin, string $message, array $context = array() ): bool
-public static function info( string $plugin, string $message, array $context = array() ): bool
-public static function warning( string $plugin, string $message, array $context = array() ): bool
-public static function error( string $plugin, string $message, array $context = array() ): bool
+public static function debug( string $plugin, $message, array $context = array() ): bool
+public static function info( string $plugin, $message, array $context = array() ): bool
+public static function warning( string $plugin, $message, array $context = array() ): bool
+public static function error( string $plugin, $message, array $context = array() ): bool
 ```
+
+Pass strings during normal operation. Non-string values are only accepted as a crash guard and are normalized to JSON before logging.
 
 **Usage:**
 ```php
@@ -543,7 +545,7 @@ do_action( 'hypercart_log', $plugin, $level, $message, $context, $timestamp );
 
 **⚠️ Use the logging feature at your own risk.** Hypercart Helper provides file-based logging as a convenience utility, but **you are responsible for securing your log directory and its contents**. Log files may contain sensitive information (user IDs, timestamps, context data, error messages) and must be protected from unauthorized access.
 
-**Redaction (v1.1.8+)** Context values are automatically redacted for known sensitive keys (e.g., `password`, `token`, `secret`, `authorization`, `api_key`). When redaction occurs, the context includes `_hh_redacted_by = "hypercart-helper"` to indicate the source.
+**Redaction (v1.1.8+)** Context values and structured non-string message payloads are automatically redacted for known sensitive keys (e.g., `password`, `token`, `secret`, `authorization`, `api_key`). When redaction occurs, the context includes `_hh_redacted_by = "hypercart-helper"` to indicate the source.
 
 **For System Administrators & Developers:** Your log directory must be placed **outside the web root** (outside `ABSPATH`) to prevent public access via HTTP requests. By default, Hypercart Helper attempts to create logs in `WP_CONTENT_DIR/hypercart-logs/`, which is often web-accessible. **You must override the log directory** using the `hypercart_log_dir` filter to point to a non-public location (e.g., `/var/log/wordpress/` or a directory above the web root). Additionally, ensure proper file permissions (e.g., `chmod 700` or `chmod 750`) so only the web server user and administrators can read logs. The plugin includes a security check in the Self Test that warns if logs are detected in a web-accessible location—if you see this warning, immediately move your logs to a secure directory. Hypercart Helper provides `.htaccess` and `index.php` protection files as a fallback, but these are **not a substitute for proper directory placement** and can be bypassed by misconfiguration or server settings.
 

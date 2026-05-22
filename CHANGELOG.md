@@ -5,6 +5,22 @@ All notable changes to the Hypercart Helper plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.16] - 2026-05-21
+
+### Fixed
+- **Logger hardening** - `Hypercart_Logger` now validates invalid log levels before min-level filtering so out-of-range values cannot bypass filtering and be written as `INFO`.
+- **Structured message redaction** - Non-string `$message` values are now normalized after min-level filtering and structured payloads are redacted before JSON encoding, so sensitive keys passed in arrays or serializable objects are protected consistently with `$context`.
+
+### Changed
+- Simplified logger PHPDoc for `$message` from `string|mixed` to `mixed` in the public logging methods and core `log()` method.
+
+## [1.1.15] - 2026-05-21
+
+### Fixed
+- **Logger crash guard** - `Hypercart_Logger` no longer throws a fatal `TypeError` when a caller passes a non-string value as `$message` (e.g. passing an array instead of a string). This crash pattern was identified in [queryguard-plugin #37](https://github.com/Hypercart-Dev-Tools/queryguard-plugin/issues/37) and caused a full site outage.
+  - Removed strict `string` type hint from `$message` in `debug()`, `info()`, `warning()`, and `error()` so PHP cannot throw before execution reaches the coercion logic.
+  - Added an explicit coercion guard at the top of `log()`: non-string values are JSON-encoded and a `_hh_coerced_type` key is stamped into `$context` so the bad call is visible in the log output.
+
 ## [1.1.14] - 2026-01-19
 
 ### Added

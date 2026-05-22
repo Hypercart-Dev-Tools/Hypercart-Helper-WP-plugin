@@ -73,11 +73,11 @@ class Hypercart_Logger {
 	 *
 	 * @since 1.0.0
 	 * @param string $plugin  Plugin slug (e.g., 'performance-monitor').
-	 * @param string $message Log message.
-	 * @param array  $context Optional structured context data.
+	 * @param mixed  $message Log message. Non-strings are coerced; see log().
+	 * @param array        $context Optional structured context data.
 	 * @return bool True if logged, false if filtered or failed.
 	 */
-	public static function debug( string $plugin, string $message, array $context = array() ): bool {
+	public static function debug( string $plugin, $message, array $context = array() ): bool {
 		return self::log( $plugin, self::LEVEL_DEBUG, $message, $context );
 	}
 
@@ -89,11 +89,11 @@ class Hypercart_Logger {
 	 *
 	 * @since 1.0.0
 	 * @param string $plugin  Plugin slug (e.g., 'performance-monitor').
-	 * @param string $message Log message.
-	 * @param array  $context Optional structured context data.
+	 * @param mixed  $message Log message. Non-strings are coerced; see log().
+	 * @param array        $context Optional structured context data.
 	 * @return bool True if logged, false if filtered or failed.
 	 */
-	public static function info( string $plugin, string $message, array $context = array() ): bool {
+	public static function info( string $plugin, $message, array $context = array() ): bool {
 		return self::log( $plugin, self::LEVEL_INFO, $message, $context );
 	}
 
@@ -104,11 +104,11 @@ class Hypercart_Logger {
 	 *
 	 * @since 1.0.0
 	 * @param string $plugin  Plugin slug (e.g., 'performance-monitor').
-	 * @param string $message Log message.
-	 * @param array  $context Optional structured context data.
+	 * @param mixed  $message Log message. Non-strings are coerced; see log().
+	 * @param array        $context Optional structured context data.
 	 * @return bool True if logged, false if filtered or failed.
 	 */
-	public static function warning( string $plugin, string $message, array $context = array() ): bool {
+	public static function warning( string $plugin, $message, array $context = array() ): bool {
 		return self::log( $plugin, self::LEVEL_WARNING, $message, $context );
 	}
 
@@ -119,11 +119,11 @@ class Hypercart_Logger {
 	 *
 	 * @since 1.0.0
 	 * @param string $plugin  Plugin slug (e.g., 'performance-monitor').
-	 * @param string $message Log message.
-	 * @param array  $context Optional structured context data.
+	 * @param mixed  $message Log message. Non-strings are coerced; see log().
+	 * @param array        $context Optional structured context data.
 	 * @return bool True if logged, false if filtered or failed.
 	 */
-	public static function error( string $plugin, string $message, array $context = array() ): bool {
+	public static function error( string $plugin, $message, array $context = array() ): bool {
 		return self::log( $plugin, self::LEVEL_ERROR, $message, $context );
 	}
 
@@ -131,6 +131,11 @@ class Hypercart_Logger {
 	 * Log a message at specified level
 	 *
 	 * Core logging method. All convenience methods route through here.
+	 *
+	 * If $message is not a string (e.g. an array was passed by mistake) it is
+	 * JSON-encoded and a '_hh_coerced_type' key is added to $context so the
+	 * caller can be identified in the log. This prevents a fatal TypeError from
+	 * crashing the site when a caller passes a non-string value.
 	 *
 	 * @since 1.0.0
 	 *
@@ -140,19 +145,28 @@ class Hypercart_Logger {
 	 *
 	 * @param string $plugin  Plugin slug (e.g., 'performance-monitor').
 	 * @param int    $level   Log level constant.
-	 * @param string $message Log message.
-	 * @param array  $context Optional structured context data.
+	 * @param mixed  $message Log message. Non-strings are coerced to JSON after redaction-aware normalization.
+	 * @param array        $context Optional structured context data.
 	 * @return bool True if logged, false if filtered or failed.
 	 */
-	public static function log( string $plugin, int $level, string $message, array $context = array() ): bool {
-		// Check minimum level
+	public static function log( string $plugin, int $level, $message, array $context = array() ): bool {
+		// Validate level
+		if ( ! isset( self::$level_names[ $level ] ) ) {
+			$level = self::LEVEL_INFO;
+		}
+
+		// Check minimum level before doing message normalization work.
 		if ( $level < self::get_min_level() ) {
 			return false;
 		}
 
-		// Validate level
-		if ( ! isset( self::$level_names[ $level ] ) ) {
-			$level = self::LEVEL_INFO;
+		$context_redacted = false;
+
+		// Coerce non-string $message to prevent a fatal TypeError from crashing
+		// the site when a caller (e.g. another plugin) passes the wrong type.
+		if ( ! is_string( $message ) ) {
+			$context['_hh_coerced_type'] = gettype( $message );
+			$message                     = self::normalize_message( $message, $context_redacted );
 		}
 
 		// Build log entry
@@ -162,7 +176,6 @@ class Hypercart_Logger {
 		$message    = self::sanitize_message( $message );
 
 		// Redact sensitive context values (comment out this block to disable redaction).
-		$context_redacted = false;
 		if ( ! empty( $context ) ) {
 			$context = self::redact_context( $context, $context_redacted );
 			if ( $context_redacted && ! isset( $context['_hh_redacted_by'] ) ) {
@@ -227,12 +240,56 @@ class Hypercart_Logger {
 				}
 			}
 
-			if ( is_array( $value ) ) {
-				$context[ $key ] = self::redact_context( $value, $redacted );
-			}
+
+			$context[ $key ] = self::normalize_log_value( $value, $redacted );
 		}
 
 		return $context;
+	}
+
+	/**
+	 * Normalize non-string log messages into a safe single-line string.
+	 *
+	 * @since 1.1.16
+	 * @param mixed $message Raw message value.
+	 * @param bool  $redacted Set to true if any redaction occurred.
+	 * @return string Normalized log message.
+	 */
+	private static function normalize_message( $message, bool &$redacted = false ): string {
+		$normalized = self::normalize_log_value( $message, $redacted );
+		$encoded    = wp_json_encode( $normalized, JSON_UNESCAPED_SLASHES );
+
+		return ( false !== $encoded )
+			? $encoded
+			: '[unserializable ' . gettype( $message ) . ']';
+	}
+
+	/**
+	 * Normalize log values while preserving redaction for structured data.
+	 *
+	 * @since 1.1.16
+	 * @param mixed $value Raw log value.
+	 * @param bool  $redacted Set to true if any redaction occurred.
+	 * @return mixed Normalized log value.
+	 */
+	private static function normalize_log_value( $value, bool &$redacted = false ) {
+		if ( is_array( $value ) ) {
+			return self::redact_context( $value, $redacted );
+		}
+
+		if ( is_object( $value ) ) {
+			if ( $value instanceof JsonSerializable ) {
+				return self::normalize_log_value( $value->jsonSerialize(), $redacted );
+			}
+
+			$public_properties = get_object_vars( $value );
+
+			if ( ! empty( $public_properties ) ) {
+				return self::redact_context( $public_properties, $redacted );
+			}
+		}
+
+		return $value;
 	}
 
 	/**
