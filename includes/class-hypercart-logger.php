@@ -72,12 +72,12 @@ class Hypercart_Logger {
 	 * Typically disabled in production.
 	 *
 	 * @since 1.0.0
-	 * @param string $plugin  Plugin slug (e.g., 'performance-monitor').
-	 * @param string $message Log message.
-	 * @param array  $context Optional structured context data.
+	 * @param string       $plugin  Plugin slug (e.g., 'performance-monitor').
+	 * @param string|mixed $message Log message. Non-strings are coerced; see log().
+	 * @param array        $context Optional structured context data.
 	 * @return bool True if logged, false if filtered or failed.
 	 */
-	public static function debug( string $plugin, string $message, array $context = array() ): bool {
+	public static function debug( string $plugin, $message, array $context = array() ): bool {
 		return self::log( $plugin, self::LEVEL_DEBUG, $message, $context );
 	}
 
@@ -88,12 +88,12 @@ class Hypercart_Logger {
 	 * Default level for most logging.
 	 *
 	 * @since 1.0.0
-	 * @param string $plugin  Plugin slug (e.g., 'performance-monitor').
-	 * @param string $message Log message.
-	 * @param array  $context Optional structured context data.
+	 * @param string       $plugin  Plugin slug (e.g., 'performance-monitor').
+	 * @param string|mixed $message Log message. Non-strings are coerced; see log().
+	 * @param array        $context Optional structured context data.
 	 * @return bool True if logged, false if filtered or failed.
 	 */
-	public static function info( string $plugin, string $message, array $context = array() ): bool {
+	public static function info( string $plugin, $message, array $context = array() ): bool {
 		return self::log( $plugin, self::LEVEL_INFO, $message, $context );
 	}
 
@@ -103,12 +103,12 @@ class Hypercart_Logger {
 	 * Use for potentially problematic situations that don't prevent operation.
 	 *
 	 * @since 1.0.0
-	 * @param string $plugin  Plugin slug (e.g., 'performance-monitor').
-	 * @param string $message Log message.
-	 * @param array  $context Optional structured context data.
+	 * @param string       $plugin  Plugin slug (e.g., 'performance-monitor').
+	 * @param string|mixed $message Log message. Non-strings are coerced; see log().
+	 * @param array        $context Optional structured context data.
 	 * @return bool True if logged, false if filtered or failed.
 	 */
-	public static function warning( string $plugin, string $message, array $context = array() ): bool {
+	public static function warning( string $plugin, $message, array $context = array() ): bool {
 		return self::log( $plugin, self::LEVEL_WARNING, $message, $context );
 	}
 
@@ -118,12 +118,12 @@ class Hypercart_Logger {
 	 * Use for error conditions that require attention.
 	 *
 	 * @since 1.0.0
-	 * @param string $plugin  Plugin slug (e.g., 'performance-monitor').
-	 * @param string $message Log message.
-	 * @param array  $context Optional structured context data.
+	 * @param string       $plugin  Plugin slug (e.g., 'performance-monitor').
+	 * @param string|mixed $message Log message. Non-strings are coerced; see log().
+	 * @param array        $context Optional structured context data.
 	 * @return bool True if logged, false if filtered or failed.
 	 */
-	public static function error( string $plugin, string $message, array $context = array() ): bool {
+	public static function error( string $plugin, $message, array $context = array() ): bool {
 		return self::log( $plugin, self::LEVEL_ERROR, $message, $context );
 	}
 
@@ -132,19 +132,34 @@ class Hypercart_Logger {
 	 *
 	 * Core logging method. All convenience methods route through here.
 	 *
+	 * If $message is not a string (e.g. an array was passed by mistake) it is
+	 * JSON-encoded and a '_hh_coerced_type' key is added to $context so the
+	 * caller can be identified in the log. This prevents a fatal TypeError from
+	 * crashing the site when a caller passes a non-string value.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @warning Do not pass sensitive information (e.g., API keys, passwords, PII) in the `$context`
 	 *          array without sanitizing it first. This data is written directly to the log file.
 	 *          Use of this feature is at your own risk.
 	 *
-	 * @param string $plugin  Plugin slug (e.g., 'performance-monitor').
-	 * @param int    $level   Log level constant.
-	 * @param string $message Log message.
-	 * @param array  $context Optional structured context data.
+	 * @param string       $plugin  Plugin slug (e.g., 'performance-monitor').
+	 * @param int          $level   Log level constant.
+	 * @param string|mixed $message Log message. Non-strings are coerced to JSON.
+	 * @param array        $context Optional structured context data.
 	 * @return bool True if logged, false if filtered or failed.
 	 */
-	public static function log( string $plugin, int $level, string $message, array $context = array() ): bool {
+	public static function log( string $plugin, int $level, $message, array $context = array() ): bool {
+		// Coerce non-string $message to prevent a fatal TypeError from crashing
+		// the site when a caller (e.g. another plugin) passes the wrong type.
+		if ( ! is_string( $message ) ) {
+			$context['_hh_coerced_type'] = gettype( $message );
+			$encoded                      = wp_json_encode( $message, JSON_UNESCAPED_SLASHES );
+			$message                      = ( false !== $encoded )
+				? $encoded
+				: '[unserializable ' . gettype( $message ) . ']';
+		}
+
 		// Check minimum level
 		if ( $level < self::get_min_level() ) {
 			return false;
