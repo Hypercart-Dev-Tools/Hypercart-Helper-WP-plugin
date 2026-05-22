@@ -2,7 +2,7 @@
 
 Shared utilities for the Hypercart plugin suite. Provides centralized time handling (UTC storage, local display), structured file-based logging, a reusable chart helper, and a safe Markdown viewer.
 
-**Version:** 1.1.14  
+**Version:** 1.1.16
 **Author:** Neochrome  
 **Requires at least:** WordPress 6.0  
 **Requires PHP:** 7.4
@@ -12,7 +12,7 @@ Shared utilities for the Hypercart plugin suite. Provides centralized time handl
 ## Features
 
 - **Hypercart_Time**: UTC-first time storage with site-timezone display helpers.
-- **Hypercart_Logger**: Structured, daily-rotated log files with context redaction and retention cleanup.
+- **Hypercart_Logger**: Structured, daily-rotated log files with redaction for sensitive structured data and retention cleanup.
 - **Hypercart_Charts**: Lightweight Chart.js helper with normalized time-series payloads.
 - **Hypercart_Markdown_Viewer**: Safe Markdown rendering with shortcode and file allowlists.
 - **Admin Tools**: Settings page with tabs (Self Test, Demo, Changelog) and a Security Guide viewer.
@@ -140,7 +140,7 @@ Notes:
 
 - Log files are stored under `WP_CONTENT_DIR/hypercart-logs` by default. Move them outside the web root if possible by filtering `hypercart_log_dir`.
 - The Markdown Viewer only renders `.md`/`.markdown` files under `WP_CONTENT_DIR` by default. Use the allowlist filters if you need to restrict or expand access.
-- Logging context is partially redacted for common sensitive keys (token, password, api_key, etc.).
+- Logging redaction applies to context and structured non-string message payloads for common sensitive keys (token, password, api_key, etc.).
 
 ---
 

@@ -5,6 +5,15 @@ All notable changes to the Hypercart Helper plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.16] - 2026-05-21
+
+### Fixed
+- **Logger hardening** - `Hypercart_Logger` now validates invalid log levels before min-level filtering so out-of-range values cannot bypass filtering and be written as `INFO`.
+- **Structured message redaction** - Non-string `$message` values are now normalized after min-level filtering and structured payloads are redacted before JSON encoding, so sensitive keys passed in arrays or serializable objects are protected consistently with `$context`.
+
+### Changed
+- Simplified logger PHPDoc for `$message` from `string|mixed` to `mixed` in the public logging methods and core `log()` method.
+
 ## [1.1.15] - 2026-05-21
 
 ### Fixed
