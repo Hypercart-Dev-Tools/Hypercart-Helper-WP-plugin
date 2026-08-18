@@ -40,6 +40,15 @@ class Hypercart_Logger {
 	public const LEVEL_ERROR   = 3;
 
 	/**
+	 * Maximum recursion depth when normalizing/redacting structured values.
+	 *
+	 * Bounds the recursion in redact_context()/normalize_log_value() so a
+	 * circular (self-referencing) or pathologically deep array/object graph
+	 * cannot exhaust memory and fatal the request. See issue #8.
+	 */
+	private const MAX_NORMALIZE_DEPTH = 8;
+
+	/**
 	 * Level names for log output
 	 *
 	 * @var array<int, string>
@@ -212,9 +221,10 @@ class Hypercart_Logger {
 	 * @since 1.1.8
 	 * @param array $context Context array.
 	 * @param bool  $redacted Set to true if any redaction occurred.
+	 * @param int   $depth   Current recursion depth (internal).
 	 * @return array Redacted context.
 	 */
-	private static function redact_context( array $context, bool &$redacted = false ): array {
+	private static function redact_context( array $context, bool &$redacted = false, int $depth = 0 ): array {
 		$keywords = array(
 			'password',
 			'passwd',
@@ -241,7 +251,7 @@ class Hypercart_Logger {
 			}
 
 
-			$context[ $key ] = self::normalize_log_value( $value, $redacted );
+			$context[ $key ] = self::normalize_log_value( $value, $redacted, $depth );
 		}
 
 		return $context;
@@ -270,22 +280,31 @@ class Hypercart_Logger {
 	 * @since 1.1.16
 	 * @param mixed $value Raw log value.
 	 * @param bool  $redacted Set to true if any redaction occurred.
+	 * @param int   $depth   Current recursion depth (internal).
 	 * @return mixed Normalized log value.
 	 */
-	private static function normalize_log_value( $value, bool &$redacted = false ) {
+	private static function normalize_log_value( $value, bool &$redacted = false, int $depth = 0 ) {
+		// Guard against circular references and pathologically deep graphs so a
+		// bad caller value cannot recurse until memory is exhausted. See issue #8.
+		if ( $depth >= self::MAX_NORMALIZE_DEPTH ) {
+			return ( is_array( $value ) || is_object( $value ) )
+				? '[max depth exceeded]'
+				: $value;
+		}
+
 		if ( is_array( $value ) ) {
-			return self::redact_context( $value, $redacted );
+			return self::redact_context( $value, $redacted, $depth + 1 );
 		}
 
 		if ( is_object( $value ) ) {
 			if ( $value instanceof JsonSerializable ) {
-				return self::normalize_log_value( $value->jsonSerialize(), $redacted );
+				return self::normalize_log_value( $value->jsonSerialize(), $redacted, $depth + 1 );
 			}
 
 			$public_properties = get_object_vars( $value );
 
 			if ( ! empty( $public_properties ) ) {
-				return self::redact_context( $public_properties, $redacted );
+				return self::redact_context( $public_properties, $redacted, $depth + 1 );
 			}
 		}
 

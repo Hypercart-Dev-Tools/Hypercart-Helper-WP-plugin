@@ -5,6 +5,13 @@ All notable changes to the Hypercart Helper plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.17] - 2026-07-02
+
+### Fixed
+- **Logger recursion crash guard** - `Hypercart_Logger` now bounds the depth of structured value normalization/redaction so a circular (self-referencing) or pathologically deep array/object graph can no longer recurse until memory is exhausted and fatal the request ([#8](https://github.com/Hypercart-Dev-Tools/Hypercart-Helper-WP-plugin/issues/8)).
+  - Added a `MAX_NORMALIZE_DEPTH` cap (8) threaded through `redact_context()` and `normalize_log_value()`; values beyond the cap are replaced with `[max depth exceeded]` instead of being walked further.
+  - This closes a fatal-error vector introduced with the object-walking added in 1.1.16, where circular public-property object graphs bypassed `wp_json_encode()`'s built-in recursion protection.
+
 ## [1.1.16] - 2026-05-21
 
 ### Fixed
